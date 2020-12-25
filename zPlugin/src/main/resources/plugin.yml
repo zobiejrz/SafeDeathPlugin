@@ -1,0 +1,7 @@
+name: SafeDeath
+version: ${project.version}
+main: dev.benzobrist.safedeath.SafeDeath
+api-version: 1.16
+authors: [ zobrist ]
+description: Provides events to be handled on death of a player
+website: dev.benzobrist
