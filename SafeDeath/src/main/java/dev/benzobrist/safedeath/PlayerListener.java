@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.DoubleChestInventory;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Location;
@@ -84,15 +85,42 @@ public class PlayerListener implements Listener {
             plugin.getLogger().info("Making Grave for " + event.getEntity().getName());
 
             Location loc = event.getEntity().getLocation(); // Where player died
-            ItemStack[] inv = event.getEntity().getPlayer().getInventory().getContents(); // Get inventory
+            ItemStack[] rawInventory = event.getEntity().getPlayer().getInventory().getContents(); // Get inventory
+            ItemStack[] inv = getNonNullInventory(rawInventory);
 
-            makeDoubleChestWithInventory(loc, inv);
+            plugin.getLogger().info("Checking size of inventory - " + inv.length + " ItemStacks");
+            if (inv.length < 1) {
+                plugin.getLogger().info("Inventory empty - not making grave.");
+                return;
+            }
+            else if (inv.length <= 27) {
+                plugin.getLogger().info("Making single chest.");
+                if (makeSingleChestWithInventory(loc, inv)) {
+                    plugin.getLogger().info("Done making single chest.");
 
-            plugin.getLogger().info("Done.");
+                    // Stops Duplication
+                    plugin.getLogger().info("Removing drops.");
+                    event.setKeepInventory(false);
+                    event.getDrops().clear();
+                }
+                else {
+                    plugin.getLogger().info("Single chest not made.");
+                }
+            }
+            else {
+                plugin.getLogger().info("Making double chest.");
+                if (makeDoubleChestWithInventory(loc, inv)) {
+                    plugin.getLogger().info("Done making double chest.");
 
-            // Stops Duplication
-            event.setKeepInventory(false);
-            event.getDrops().clear();
+                    // Stops Duplication
+                    plugin.getLogger().info("Removing drops.");
+                    event.setKeepInventory(false);
+                    event.getDrops().clear();
+                }
+                else {
+                    plugin.getLogger().info("Double chest not made.");
+                }
+            }
         }
 
         // Send paper coordinates
@@ -102,9 +130,10 @@ public class PlayerListener implements Listener {
             Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {
                 public void run() {
                     sendPlayerCoordinatesOnPaper(Objects.requireNonNull(event.getEntity().getPlayer()), deathLocation);
+                    plugin.getLogger().info("Sent Paper to " + event.getEntity().getName());
                 }
             }, 100);
-            plugin.getLogger().info("Done.");
+
         }
         else if (isDeveloper && shouldSendDevPaper) {
             Location deathLocation = event.getEntity().getLocation();
@@ -118,19 +147,86 @@ public class PlayerListener implements Listener {
     }
 
     /**
+     * Removes null ItemStacks from an inventory
+     * @param inv       the inventory to process
+     * @return          an ItemStack[] with no null items
+     */
+    private ItemStack[] getNonNullInventory(ItemStack[] inv) {
+        plugin.getLogger().info("Making Non Null Inventory");
+        int size = 0;
+        for (ItemStack i : inv) {
+            if (i != null) {
+                size += 1;
+            }
+        }
+
+        int index = 0;
+        ItemStack[] output = new ItemStack[size];
+        for (ItemStack i : inv) {
+            if (i != null) {
+                output[index] = i;
+                index += 1;
+            }
+        }
+
+        plugin.getLogger().info("Made non null inventory " + size + " ItemStacks big");
+        return output;
+    }
+
+    /**
+     * Makes and fills a single chest of items.
+     * @param loc       the location to put the chest
+     * @param inv       the inventory to put in the chest
+     * @return          the boolean for whether or not the chest was made
+     */
+    private boolean makeSingleChestWithInventory(Location loc, ItemStack[] inv) {
+
+        if (inv.length > 27) {
+            plugin.getLogger().severe("Error - Inventory is too big");
+            return false;
+        }
+        // Get the block to become the chest
+        Block block = loc.getBlock();
+
+        // Make it a chest
+        block.setType(Material.CHEST);
+
+        // Get the chest inventory and put in items
+        try {
+            Chest chest = (Chest) block.getState();
+            Inventory chestInventory = (Inventory) chest.getInventory();
+            for (ItemStack i : inv) { // Add new drops to block
+//                    plugin.getLogger().info("Added an item - " + i);
+                if (i != null) {
+                    chestInventory.addItem(i);
+                }
+            }
+        }
+        catch(Exception e) {
+            plugin.getLogger().severe("ERROR - " + e.toString());
+        }
+
+        return true;
+    }
+
+    /**
      * Makes and fills a double chest of items.
      * @param loc       the location to put the chest
      * @param inv       the inventory to put in the chest
+     * @return          the boolean for whether or not the chest was made
      */
-    private void makeDoubleChestWithInventory(Location loc, ItemStack[] inv) {
-        // Get the two blocks to become the chest
+    private boolean makeDoubleChestWithInventory(Location loc, ItemStack[] inv) {
+        if (inv.length > 56) {
+            plugin.getLogger().severe("Error - Inventory is too big");
+            return false;
+        }
+        // Get the two blocks to become the chests
         Block leftSide = loc.getBlock();
         Block rightSide = loc.clone().add(0, 0, -1).getBlock();
 
         // Make them both chests
         leftSide.setType(Material.CHEST);
         rightSide.setType(Material.CHEST);
-
 
         // Set the block data for both and connect the chests
         BlockData leftData = leftSide.getBlockData();
@@ -163,6 +259,7 @@ public class PlayerListener implements Listener {
         catch(Exception e) {
             plugin.getLogger().severe("ERROR - " + e.toString());
         }
+        return true;
     }
 
 
