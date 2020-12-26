@@ -6,12 +6,15 @@ public final class SafeDeath extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
+        // Plugin startup login
 
+        // Register Listeners
+        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
     }
+
 }
