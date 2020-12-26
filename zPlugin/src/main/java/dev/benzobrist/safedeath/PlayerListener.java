@@ -58,8 +58,6 @@ public class PlayerListener implements Listener {
         boolean shouldSendDevPaper = false; // move to easter egg
 
         boolean shouldMakeGrave = true; // move to config
-        boolean shouldGraveDrop = true; // move to config
-        boolean shouldLockGraves = true; // move to config
 
         String payRespectMessage = "f"; // move to config
         String payRespectToDevMessage = "Oh! The Horror! The Maker has fallen in battle!"; // move to easter egg
