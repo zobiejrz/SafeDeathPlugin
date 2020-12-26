@@ -2,14 +2,17 @@ package dev.benzobrist.safedeath;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.Chest;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockDataMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -49,7 +52,7 @@ public class PlayerListener implements Listener {
         boolean shouldPayRespects = true; // move to config
         boolean shouldPayRespectsToDev = true;
 
-        boolean shouldDevKeepInv = true; // move to easter egg
+        boolean shouldDevKeepInv = false; // move to easter egg
 
         boolean shouldSendPaper = true; // move to config
         boolean shouldSendDevPaper = false; // move to easter egg
@@ -70,22 +73,6 @@ public class PlayerListener implements Listener {
             Bukkit.broadcastMessage(payRespectMessage);
         }
 
-        // Send paper coordinates
-        if (shouldSendPaper) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {
-                public void run() {
-                    sendPlayerCoordinatesOnPaper(Objects.requireNonNull(event.getEntity().getPlayer()));
-                }
-            }, 100);
-        }
-        else if (isDeveloper && shouldSendDevPaper) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {
-                public void run() {
-                    sendPlayerCoordinatesOnPaper(Objects.requireNonNull(event.getEntity().getPlayer()));
-                }
-            }, 100);
-        }
-
         // Keep Inventory
         if (isDeveloper && shouldDevKeepInv) {
             event.setKeepInventory(true);
@@ -95,7 +82,76 @@ public class PlayerListener implements Listener {
             event.setDroppedExp(0);
             event.getDrops().clear();
         }
-        
+        else if (shouldMakeGrave) {
+            plugin.getLogger().info("Making Grave for " + event.getEntity().getName());
+
+            Location loc = event.getEntity().getLocation(); // Where player died
+            ItemStack[] inv = event.getEntity().getPlayer().getInventory().getContents(); // Get inventory
+
+            Block leftSide = loc.getBlock();
+            Block rightSide = loc.clone().add(0, 0, -1).getBlock();
+
+            leftSide.setType(Material.CHEST);
+            rightSide.setType(Material.CHEST);
+
+            BlockData leftData = leftSide.getBlockData();
+            ((Directional) leftData).setFacing(BlockFace.EAST);
+            leftSide.setBlockData(leftData);
+
+            org.bukkit.block.data.type.Chest chestDataLeft = (org.bukkit.block.data.type.Chest) leftData;
+            chestDataLeft.setType(org.bukkit.block.data.type.Chest.Type.RIGHT);
+            leftSide.setBlockData(chestDataLeft);
+
+            Chest leftChest = (Chest) leftSide.getState();
+
+            BlockData rightData = rightSide.getBlockData();
+            ((Directional) rightData).setFacing(BlockFace.EAST);
+            rightSide.setBlockData(rightData);
+
+            org.bukkit.block.data.type.Chest chestDataRight = (org.bukkit.block.data.type.Chest) rightData;
+            chestDataRight.setType(org.bukkit.block.data.type.Chest.Type.LEFT);
+            rightSide.setBlockData(chestDataRight);
+
+            World world = loc.getWorld();
+
+            try {
+                DoubleChestInventory chestInventory = (DoubleChestInventory) leftChest.getInventory();
+                for (ItemStack i : inv) { // Add new drops to block
+//                    plugin.getLogger().info("Added an item - " + i);
+                    if (i != null) {
+                        chestInventory.addItem(i);
+                    }
+                }
+            }
+            catch(Exception e) {
+                plugin.getLogger().severe("ERROR - " + e.toString());
+            }
+            plugin.getLogger().info("Done.");
+
+            // Stops Duplication
+            event.setKeepInventory(false);
+            event.getDrops().clear();
+        }
+
+        // Send paper coordinates
+        if (shouldSendPaper) {
+            plugin.getLogger().info("Sending Paper Coordinates to " + event.getEntity().getName());
+            Location deathLocation = event.getEntity().getLocation();
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {
+                public void run() {
+                    sendPlayerCoordinatesOnPaper(Objects.requireNonNull(event.getEntity().getPlayer()), deathLocation);
+                }
+            }, 100);
+            plugin.getLogger().info("Done.");
+        }
+        else if (isDeveloper && shouldSendDevPaper) {
+            Location deathLocation = event.getEntity().getLocation();
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {
+                public void run() {
+                    sendPlayerCoordinatesOnPaper(Objects.requireNonNull(event.getEntity().getPlayer()), deathLocation);
+                }
+            }, 100);
+        }
 
     }
 
@@ -103,17 +159,17 @@ public class PlayerListener implements Listener {
     * @param player    the player to receive their own coordinates on paper
     * @return
     */
-    private void sendPlayerCoordinatesOnPaper(org.bukkit.entity.Player player) {
+    private void sendPlayerCoordinatesOnPaper(org.bukkit.entity.Player player, Location location) {
         // Make the message
-        String dimension = player.getLocation().getWorld().getName();
+        String dimension = location.getWorld().getName();
 
-        Double x = player.getLocation().getX(); // This gets the component as a Double
+        Double x = location.getX(); // This gets the component as a Double
         String xStr = String.format("%.2f", x); // This formats to two decimal spots
 
-        Double y = player.getLocation().getY();
+        Double y = location.getY();
         String yStr = String.format("%.2f", y);
 
-        Double z = player.getLocation().getZ();
+        Double z = location.getZ();
         String zStr = String.format("%.2f", z);
 
         String message = String.format("%s %s %s %s", dimension, xStr, yStr, zStr);
