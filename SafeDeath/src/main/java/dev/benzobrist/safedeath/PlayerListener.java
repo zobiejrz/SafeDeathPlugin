@@ -49,18 +49,10 @@ public class PlayerListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         boolean isDeveloper = (event.getEntity().getPlayer() == Bukkit.getPlayer(UUID.fromString("3c96696c-e367-4547-b00a-a7a7bf7e5a6d")));
-
-        boolean shouldPayRespects = true; // move to config
         boolean shouldPayRespectsToDev = true;
+        boolean shouldDevKeepInv = false;
+        boolean shouldSendDevPaper = true;
 
-        boolean shouldDevKeepInv = false; // move to easter egg
-
-        boolean shouldSendPaper = true; // move to config
-        boolean shouldSendDevPaper = false; // move to easter egg
-
-        boolean shouldMakeGrave = true; // move to config
-
-        String payRespectMessage = "f"; // move to config
         String payRespectToDevMessage = "Oh! The Horror! The Maker has fallen in battle!"; // move to easter egg
 
 
@@ -68,8 +60,8 @@ public class PlayerListener implements Listener {
         if (isDeveloper && shouldPayRespectsToDev) {
             Bukkit.broadcastMessage(payRespectToDevMessage);
         }
-        else if (shouldPayRespects) {
-            Bukkit.broadcastMessage(payRespectMessage);
+        else if (plugin.getConfig().getBoolean("shouldPayRespects")) {
+            Bukkit.broadcastMessage(plugin.getConfig().getString("payRespectMessage"));
         }
 
         // Keep Inventory
@@ -81,7 +73,7 @@ public class PlayerListener implements Listener {
             event.setDroppedExp(0);
             event.getDrops().clear();
         }
-        else if (shouldMakeGrave) {
+        else if (plugin.getConfig().getBoolean("shouldMakeGrave")) {
             plugin.getLogger().info("Making Grave for " + event.getEntity().getName());
 
             Location loc = event.getEntity().getLocation(); // Where player died
@@ -124,7 +116,7 @@ public class PlayerListener implements Listener {
         }
 
         // Send paper coordinates
-        if (shouldSendPaper) {
+        if (plugin.getConfig().getBoolean("shouldSendPaper")) {
             plugin.getLogger().info("Sending Paper Coordinates to " + event.getEntity().getName());
             Location deathLocation = event.getEntity().getLocation();
             Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {

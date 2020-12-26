@@ -1,0 +1,7 @@
+# SafeDeath config.yml
+
+shouldPayRespects: on
+shouldSendPaper: on
+shouldMakeGrave: on
+
+payRespectMessage: "f"

@@ -6,7 +6,7 @@
 
     <groupId>dev.benzobrist</groupId>
     <artifactId>SafeDeath</artifactId>
-    <version>20.12.26-alpha.2</version>
+    <version>20.12.26-alpha.3</version>
     <packaging>jar</packaging>
 
     <name>SafeDeath</name>
