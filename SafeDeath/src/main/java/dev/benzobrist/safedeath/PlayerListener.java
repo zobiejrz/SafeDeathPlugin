@@ -86,44 +86,8 @@ public class PlayerListener implements Listener {
             Location loc = event.getEntity().getLocation(); // Where player died
             ItemStack[] inv = event.getEntity().getPlayer().getInventory().getContents(); // Get inventory
 
-            Block leftSide = loc.getBlock();
-            Block rightSide = loc.clone().add(0, 0, -1).getBlock();
+            makeDoubleChestWithInventory(loc, inv);
 
-            leftSide.setType(Material.CHEST);
-            rightSide.setType(Material.CHEST);
-
-            BlockData leftData = leftSide.getBlockData();
-            ((Directional) leftData).setFacing(BlockFace.EAST);
-            leftSide.setBlockData(leftData);
-
-            org.bukkit.block.data.type.Chest chestDataLeft = (org.bukkit.block.data.type.Chest) leftData;
-            chestDataLeft.setType(org.bukkit.block.data.type.Chest.Type.RIGHT);
-            leftSide.setBlockData(chestDataLeft);
-
-            Chest leftChest = (Chest) leftSide.getState();
-
-            BlockData rightData = rightSide.getBlockData();
-            ((Directional) rightData).setFacing(BlockFace.EAST);
-            rightSide.setBlockData(rightData);
-
-            org.bukkit.block.data.type.Chest chestDataRight = (org.bukkit.block.data.type.Chest) rightData;
-            chestDataRight.setType(org.bukkit.block.data.type.Chest.Type.LEFT);
-            rightSide.setBlockData(chestDataRight);
-
-            World world = loc.getWorld();
-
-            try {
-                DoubleChestInventory chestInventory = (DoubleChestInventory) leftChest.getInventory();
-                for (ItemStack i : inv) { // Add new drops to block
-//                    plugin.getLogger().info("Added an item - " + i);
-                    if (i != null) {
-                        chestInventory.addItem(i);
-                    }
-                }
-            }
-            catch(Exception e) {
-                plugin.getLogger().severe("ERROR - " + e.toString());
-            }
             plugin.getLogger().info("Done.");
 
             // Stops Duplication
@@ -154,9 +118,59 @@ public class PlayerListener implements Listener {
     }
 
     /**
-    * @param player    the player to receive their own coordinates on paper
-    * @return
-    */
+     * Makes and fills a double chest of items.
+     * @param loc       the location to put the chest
+     * @param inv       the inventory to put in the chest
+     */
+    private void makeDoubleChestWithInventory(Location loc, ItemStack[] inv) {
+        // Get the two blocks to become the chest
+        Block leftSide = loc.getBlock();
+        Block rightSide = loc.clone().add(0, 0, -1).getBlock();
+
+        // Make them both chests
+        leftSide.setType(Material.CHEST);
+        rightSide.setType(Material.CHEST);
+
+
+        // Set the block data for both and connect the chests
+        BlockData leftData = leftSide.getBlockData();
+        ((Directional) leftData).setFacing(BlockFace.EAST);
+        leftSide.setBlockData(leftData);
+
+        org.bukkit.block.data.type.Chest chestDataLeft = (org.bukkit.block.data.type.Chest) leftData;
+        chestDataLeft.setType(org.bukkit.block.data.type.Chest.Type.RIGHT);
+        leftSide.setBlockData(chestDataLeft);
+
+        BlockData rightData = rightSide.getBlockData();
+        ((Directional) rightData).setFacing(BlockFace.EAST);
+        rightSide.setBlockData(rightData);
+
+        org.bukkit.block.data.type.Chest chestDataRight = (org.bukkit.block.data.type.Chest) rightData;
+        chestDataRight.setType(org.bukkit.block.data.type.Chest.Type.LEFT);
+        rightSide.setBlockData(chestDataRight);
+
+        // Get the chest inventory and put in items
+        try {
+            Chest leftChest = (Chest) leftSide.getState();
+            DoubleChestInventory chestInventory = (DoubleChestInventory) leftChest.getInventory();
+            for (ItemStack i : inv) { // Add new drops to block
+//                    plugin.getLogger().info("Added an item - " + i);
+                if (i != null) {
+                    chestInventory.addItem(i);
+                }
+            }
+        }
+        catch(Exception e) {
+            plugin.getLogger().severe("ERROR - " + e.toString());
+        }
+    }
+
+
+    /**
+     * Sends a player a piece of paper with coordinates on it.
+     * @param player        the player to receive the paper
+     * @param location      the coordinates on the paper
+     */
     private void sendPlayerCoordinatesOnPaper(org.bukkit.entity.Player player, Location location) {
         // Make the message
         String dimension = location.getWorld().getName();
