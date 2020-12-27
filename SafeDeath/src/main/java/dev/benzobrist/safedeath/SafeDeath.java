@@ -19,6 +19,7 @@ public final class SafeDeath extends JavaPlugin {
         // Register Listeners
         getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
+        getServer().getPluginManager().registerEvents(new ChestListener(this), this);
     }
 
     @Override

@@ -14,4 +14,4 @@ shouldSendPaper: on       # Whether or not death coordinates are sent
 shouldMakeGrave: on       # Whether or not graves are made
 
 protectedGraves: on       # When on graves can only be broken/opened by the owner
-disappearingGraves: on    # When on graves will disappear when empty and not drop chests
+disappearingGraves: on    # When on graves will disappear when empty or destroyed and not drop chests
