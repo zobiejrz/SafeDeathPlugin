@@ -1,12 +1,10 @@
 package dev.benzobrist.safedeath;
 
 import org.bukkit.Bukkit;
-import org.bukkit.World;
+import org.bukkit.NamespacedKey;
+import org.bukkit.block.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.Chest;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -17,31 +15,36 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Objects;
 import java.util.UUID;
 
+import static dev.benzobrist.safedeath.SafeDeath.getNonNullInventory;
 
-public class PlayerListener implements Listener {
+
+public class DeathListener implements Listener {
 
     private SafeDeath plugin;
 
-    PlayerListener(SafeDeath plugin) {
+    DeathListener(SafeDeath plugin) {
         this.plugin = plugin;
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         boolean isDeveloper = (event.getPlayer() == Bukkit.getPlayer(UUID.fromString("3c96696c-e367-4547-b00a-a7a7bf7e5a6d")));
+        boolean shouldSendWelcome = plugin.getConfig().getBoolean("shouldSendWelcome");
 
         if (isDeveloper) {
             Bukkit.broadcastMessage("Praise the Maker! Welcome, Master " + event.getPlayer().getName() + "!");
         }
-        else if (event.getPlayer().hasPlayedBefore()) {
-            Bukkit.broadcastMessage("Welcome back " + event.getPlayer().getName());
+        else if (shouldSendWelcome && event.getPlayer().hasPlayedBefore()) {
+            Bukkit.broadcastMessage(plugin.getConfig().getString("welcomeMessage") + event.getPlayer().getName());
         }
-        else {
-            Bukkit.broadcastMessage("Welcome to the server, " + event.getPlayer().getName());
+        else if (shouldSendWelcome) {
+            Bukkit.broadcastMessage(plugin.getConfig().getString("welcomeNewPlayerMessage") + event.getPlayer().getName());
         }
     }
 
@@ -78,7 +81,7 @@ public class PlayerListener implements Listener {
 
             Location loc = event.getEntity().getLocation(); // Where player died
             ItemStack[] rawInventory = event.getEntity().getPlayer().getInventory().getContents(); // Get inventory
-            ItemStack[] inv = getNonNullInventory(rawInventory);
+            ItemStack[] inv = getNonNullInventory(plugin, rawInventory);
 
             plugin.getLogger().info("Checking size of inventory - " + inv.length + " ItemStacks");
             if (inv.length < 1) {
@@ -87,7 +90,7 @@ public class PlayerListener implements Listener {
             }
             else if (inv.length <= 27) {
                 plugin.getLogger().info("Making single chest.");
-                if (makeSingleChestWithInventory(loc, inv)) {
+                if (makeSingleChestWithInventory(loc, inv, event.getEntity().getPlayer().getUniqueId().toString())) {
                     plugin.getLogger().info("Done making single chest.");
 
                     // Stops Duplication
@@ -101,7 +104,7 @@ public class PlayerListener implements Listener {
             }
             else {
                 plugin.getLogger().info("Making double chest.");
-                if (makeDoubleChestWithInventory(loc, inv)) {
+                if (makeDoubleChestWithInventory(loc, inv, event.getEntity().getPlayer().getUniqueId().toString())) {
                     plugin.getLogger().info("Done making double chest.");
 
                     // Stops Duplication
@@ -139,39 +142,12 @@ public class PlayerListener implements Listener {
     }
 
     /**
-     * Removes null ItemStacks from an inventory
-     * @param inv       the inventory to process
-     * @return          an ItemStack[] with no null items
-     */
-    private ItemStack[] getNonNullInventory(ItemStack[] inv) {
-        plugin.getLogger().info("Making Non Null Inventory");
-        int size = 0;
-        for (ItemStack i : inv) {
-            if (i != null) {
-                size += 1;
-            }
-        }
-
-        int index = 0;
-        ItemStack[] output = new ItemStack[size];
-        for (ItemStack i : inv) {
-            if (i != null) {
-                output[index] = i;
-                index += 1;
-            }
-        }
-
-        plugin.getLogger().info("Made non null inventory " + size + " ItemStacks big");
-        return output;
-    }
-
-    /**
      * Makes and fills a single chest of items.
      * @param loc       the location to put the chest
      * @param inv       the inventory to put in the chest
      * @return          the boolean for whether or not the chest was made
      */
-    private boolean makeSingleChestWithInventory(Location loc, ItemStack[] inv) {
+    private boolean makeSingleChestWithInventory(Location loc, ItemStack[] inv, String ownerUUID) {
 
         if (inv.length > 27) {
             plugin.getLogger().severe("Error - Inventory is too big");
@@ -182,6 +158,13 @@ public class PlayerListener implements Listener {
 
         // Make it a chest
         block.setType(Material.CHEST);
+
+        // Set grave owner
+        BlockState blockState = block.getState();
+        TileState tileState = (TileState) blockState;
+        PersistentDataContainer container = tileState.getPersistentDataContainer();
+        container.set(new NamespacedKey(plugin,"graveOwner"), PersistentDataType.STRING, ownerUUID);
+        tileState.update(true);
 
         // Get the chest inventory and put in items
         try {
@@ -207,7 +190,7 @@ public class PlayerListener implements Listener {
      * @param inv       the inventory to put in the chest
      * @return          the boolean for whether or not the chest was made
      */
-    private boolean makeDoubleChestWithInventory(Location loc, ItemStack[] inv) {
+    private boolean makeDoubleChestWithInventory(Location loc, ItemStack[] inv, String ownerUUID) {
         if (inv.length > 56) {
             plugin.getLogger().severe("Error - Inventory is too big");
             return false;
@@ -236,6 +219,19 @@ public class PlayerListener implements Listener {
         org.bukkit.block.data.type.Chest chestDataRight = (org.bukkit.block.data.type.Chest) rightData;
         chestDataRight.setType(org.bukkit.block.data.type.Chest.Type.LEFT);
         rightSide.setBlockData(chestDataRight);
+
+        // Set the grave owner for both chests
+        BlockState leftState = leftSide.getState();
+        TileState leftTileState = (TileState) leftState;
+        PersistentDataContainer leftContainer = leftTileState.getPersistentDataContainer();
+        leftContainer.set(new NamespacedKey(plugin,"graveOwner"), PersistentDataType.STRING, ownerUUID);
+        leftTileState.update(true);
+
+        BlockState rightState = rightSide.getState();
+        TileState rightTileState = (TileState) rightState;
+        PersistentDataContainer rightContainer = rightTileState.getPersistentDataContainer();
+        rightContainer.set(new NamespacedKey(plugin,"graveOwner"), PersistentDataType.STRING, ownerUUID);
+        rightTileState.update(true);
 
         // Get the chest inventory and put in items
         try {

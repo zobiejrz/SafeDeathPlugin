@@ -1,7 +1,17 @@
 # SafeDeath config.yml
 
-shouldPayRespects: on
-shouldSendPaper: on
-shouldMakeGrave: on
+# Welcome Message Config
+shouldSendWelcome: off    # Whether or not welcome messages are sent (off by default)
+welcomeNewPlayerMessage: "Welcome to the server, "
+welcomeMessage: "Welcome back "
 
-payRespectMessage: "f"
+# Death Message Config
+shouldPayRespects: on     # Whether or not respect messages are sent
+payRespectMessage: "f"    # Server message sent on deaths
+
+# Grave Generation Config
+shouldSendPaper: on       # Whether or not death coordinates are sent
+shouldMakeGrave: on       # Whether or not graves are made
+
+protectedGraves: on       # When on graves can only be broken/opened by the owner
+disappearingGraves: on    # When on graves will disappear when empty and not drop chests
