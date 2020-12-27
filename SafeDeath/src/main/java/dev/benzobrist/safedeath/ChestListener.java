@@ -1,5 +1,6 @@
 package dev.benzobrist.safedeath;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
@@ -15,6 +16,8 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+
+import java.util.UUID;
 
 import static dev.benzobrist.safedeath.SafeDeath.getNonNullInventory;
 
@@ -39,7 +42,7 @@ public class ChestListener implements Listener {
 
             if (container.has(new NamespacedKey(plugin, "graveOwner"), PersistentDataType.STRING)) {
                 String ownerUUID = container.get(new NamespacedKey(plugin, "graveOwner"), PersistentDataType.STRING);
-                boolean isOwner = (ownerUUID == event.getPlayer().getUniqueId().toString());
+                boolean isOwner = (event.getPlayer() == Bukkit.getPlayer(UUID.fromString(ownerUUID)));
 
                 if (plugin.getConfig().getBoolean("protectedGraves") && !isOwner) {
                     plugin.getLogger().info(event.getPlayer().getName() + " attempted opening someone else's grave - cancelled");

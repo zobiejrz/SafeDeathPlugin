@@ -1,5 +1,6 @@
 package dev.benzobrist.safedeath;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -12,6 +13,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+
+import java.util.UUID;
 
 import static dev.benzobrist.safedeath.SafeDeath.getNonNullInventory;
 
@@ -46,7 +49,7 @@ public class BlockBreakListener implements Listener {
             return; // it's not a grave so no additional handling needed
         }
 
-        boolean isOwner = (ownerUUID == event.getPlayer().getUniqueId().toString());
+        boolean isOwner = (event.getPlayer() == Bukkit.getPlayer(UUID.fromString(ownerUUID)));
         event.setCancelled(true); // We know it's a grave so it's definitely cancelled
 
         // Perform check to cancel event
