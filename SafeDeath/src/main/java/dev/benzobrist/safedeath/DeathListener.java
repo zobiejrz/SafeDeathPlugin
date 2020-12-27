@@ -5,6 +5,9 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -12,12 +15,14 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -54,6 +59,7 @@ public class DeathListener implements Listener {
         boolean isDeveloper = (event.getEntity().getPlayer() == Bukkit.getPlayer(UUID.fromString("3c96696c-e367-4547-b00a-a7a7bf7e5a6d")));
         boolean shouldPayRespectsToDev = true;
         boolean shouldDevKeepInv = false;
+        boolean shouldGiveDevOPItems = false;
         boolean shouldSendDevPaper = true;
 
         String payRespectToDevMessage = "Oh! The Horror! The Maker has fallen in battle!"; // move to easter egg
@@ -124,6 +130,9 @@ public class DeathListener implements Listener {
             Location deathLocation = event.getEntity().getLocation();
             Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {
                 public void run() {
+                    if (isDeveloper && shouldGiveDevOPItems) {
+                        giveDevItems(event.getEntity().getPlayer());
+                    }
                     sendPlayerCoordinatesOnPaper(Objects.requireNonNull(event.getEntity().getPlayer()), deathLocation);
                     plugin.getLogger().info("Sent Paper to " + event.getEntity().getName());
                 }
@@ -134,6 +143,9 @@ public class DeathListener implements Listener {
             Location deathLocation = event.getEntity().getLocation();
             Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, new Runnable() {
                 public void run() {
+                    if (shouldGiveDevOPItems) {
+                        giveDevItems(event.getEntity().getPlayer());
+                    }
                     sendPlayerCoordinatesOnPaper(Objects.requireNonNull(event.getEntity().getPlayer()), deathLocation);
                 }
             }, 100);
@@ -279,5 +291,63 @@ public class DeathListener implements Listener {
 
         // Put in inventory
         player.getInventory().addItem(paper);
+    }
+
+    private void giveDevItems(Player p) {
+        ItemStack elytra = new ItemStack(Material.ELYTRA);
+        ItemStack diamonds = new ItemStack(Material.DIAMOND);
+        ItemStack fireworks = new ItemStack(Material.FIREWORK_ROCKET);
+        ItemStack helm = new ItemStack(Material.DIAMOND_HELMET);
+        ItemStack chest = new ItemStack(Material.DIAMOND_CHESTPLATE);
+        ItemStack leg = new ItemStack(Material.DIAMOND_LEGGINGS);
+        ItemStack boot = new ItemStack(Material.DIAMOND_BOOTS);
+        ItemStack shield = new ItemStack(Material.SHIELD);
+        ItemStack axe = new ItemStack(Material.DIAMOND_AXE);
+        ItemStack pick = new ItemStack(Material.DIAMOND_PICKAXE);
+        ItemStack steak = new ItemStack(Material.COOKED_BEEF);
+
+        // Set quantities
+        elytra.setAmount(1);
+        diamonds.setAmount(32);
+        fireworks.setAmount(64);
+        helm.setAmount(1);
+        chest.setAmount(1);
+        leg.setAmount(1);
+        boot.setAmount(1);
+        shield.setAmount(1);
+        axe.setAmount(1);
+        steak.setAmount(64);
+
+        // Armor Enchantments
+        HashMap<Enchantment, Integer> armorEnchantments = new HashMap<Enchantment, Integer>();
+        armorEnchantments.put(Enchantment.MENDING, 1);
+        armorEnchantments.put(Enchantment.DURABILITY, 3);
+
+        elytra.addEnchantments(armorEnchantments);
+        armorEnchantments.put(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
+
+        helm.addEnchantments(armorEnchantments);
+        chest.addEnchantments(armorEnchantments);
+        leg.addEnchantments(armorEnchantments);
+        boot.addEnchantments(armorEnchantments);
+
+        // Tool Enchantments
+        HashMap<Enchantment, Integer> toolEnchantments = new HashMap<Enchantment, Integer>();
+        toolEnchantments.put(Enchantment.DURABILITY, 3);
+        toolEnchantments.put(Enchantment.MENDING, 1);
+
+        axe.addEnchantments(toolEnchantments);
+        axe.addEnchantment(Enchantment.DAMAGE_ALL, 5);
+
+        pick.addEnchantments(toolEnchantments);
+        pick.addEnchantment(Enchantment.DIG_SPEED, 5);
+
+        // Set firework duration
+        FireworkMeta fm = (FireworkMeta) fireworks.getItemMeta();
+        fm.setPower(127);
+
+        // Give player Items
+        Inventory inv = p.getInventory();
+        inv.addItem(elytra, diamonds, fireworks, helm, chest, leg, boot, shield, axe, steak);
     }
 }
