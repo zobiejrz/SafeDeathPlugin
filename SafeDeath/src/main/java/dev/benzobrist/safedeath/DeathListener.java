@@ -64,6 +64,9 @@ public class DeathListener implements Listener {
 
         String payRespectToDevMessage = "Oh! The Horror! The Maker has fallen in battle!"; // move to easter egg
 
+        if (plugin.getConfig().getBoolean("shouldLogDeathInv")) {
+            plugin.makeInventoryLogFile(event.getEntity().getPlayer());
+        }
 
         // Pay Respects
         if (isDeveloper && shouldPayRespectsToDev) {
@@ -181,13 +184,19 @@ public class DeathListener implements Listener {
         // Get the chest inventory and put in items
         try {
             Chest chest = (Chest) block.getState();
-            Inventory chestInventory = (Inventory) chest.getInventory();
+            Inventory chestInventory = chest.getInventory();
             for (ItemStack i : inv) { // Add new drops to block
 //                    plugin.getLogger().info("Added an item - " + i);
                 if (i != null) {
                     chestInventory.addItem(i);
                 }
             }
+        }
+        catch(ClassCastException e) {
+            plugin.getLogger().severe("ERROR - Class Cast Exception, potentially the one that deletes single chest items? - " + e.toString());
+            Player p = Bukkit.getPlayer(UUID.fromString(ownerUUID));
+            p.sendMessage("Hey! Listen!");
+            p.sendMessage("What you just did caused an error that is potentially related to single chest graves losing items! DM Ike2d2 or zobrist what you did and whether or not you need help recovering items!");
         }
         catch(Exception e) {
             plugin.getLogger().severe("ERROR - " + e.toString());
@@ -248,13 +257,19 @@ public class DeathListener implements Listener {
         // Get the chest inventory and put in items
         try {
             Chest leftChest = (Chest) leftSide.getState();
-            DoubleChestInventory chestInventory = (DoubleChestInventory) leftChest.getInventory();
+            Inventory chestInventory = leftChest.getInventory();
             for (ItemStack i : inv) { // Add new drops to block
 //                    plugin.getLogger().info("Added an item - " + i);
                 if (i != null) {
                     chestInventory.addItem(i);
                 }
             }
+        }
+        catch(ClassCastException e) {
+            plugin.getLogger().severe("ERROR - Class Cast Exception, potentially the one that deletes double chest items? - " + e.toString());
+            Player p = Bukkit.getPlayer(UUID.fromString(ownerUUID));
+            p.sendMessage("Hey! Listen!");
+            p.sendMessage("What you just did caused an error that is potentially related to double chest graves losing items! DM Ike2d2 or zobrist what you did and whether or not you need help recovering items!");
         }
         catch(Exception e) {
             plugin.getLogger().severe("ERROR - " + e.toString());

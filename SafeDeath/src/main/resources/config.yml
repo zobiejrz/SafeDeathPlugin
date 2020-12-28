@@ -10,6 +10,7 @@ shouldPayRespects: on     # Whether or not respect messages are sent
 payRespectMessage: "f"    # Server message sent on deaths
 
 # Grave Generation Config
+shouldLogDeathInv: on     # Whether or not inventories are logged on death
 shouldSendPaper: on       # Whether or not death coordinates are sent
 shouldMakeGrave: on       # Whether or not graves are made
 
