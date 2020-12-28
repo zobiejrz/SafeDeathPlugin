@@ -21,6 +21,7 @@
 | welcomeMessage           | The string broacast when a returning player joins (**NOTE**: see previous note)                                                                       |
 | shouldPayRespects        | Whether or not ```payRespectMessage``` is sent on player death                                                                                        |
 | payRespectMessage        | The string broadcast if ```shouldPayRespects``` is set to true                                                                                        |
+| shouldLogDeathInv        | Whether or not player inventories are logged on death (Useful in case of inventory loss due to bugs or server errors)                                 |
 | shouldSendPaper          | Whether or not death coordinates are sent to players on respawn                                                                                       |
 | shouldMakeGrave          | Whether or not graves are made on player death                                                                                                        |
 | protectedGraves          | Whether or not graves can only be broken/opened by the owner                                                                                          |
