@@ -56,7 +56,7 @@ public final class SafeDeath extends JavaPlugin {
         String playerName = p.getName();
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
-        String fileName = String.format("%s %s.log", playerName, timestamp);
+        String fileName = String.format("%s %d.log", playerName, timestamp.getTime());
 
         File logFile = new File(getDataFolder(), String.format("./Inventory Logs/%s", fileName));
 
