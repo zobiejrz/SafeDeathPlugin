@@ -76,7 +76,7 @@ public final class SafeDeath extends JavaPlugin {
     public void onEnable() {
         // Plugin startup login
         createConfigFile(); // Set up config data
-
+        getLogger().info("Isaac was here");
         // Register Listeners
         getServer().getPluginManager().registerEvents(new DeathListener(this), this);
         getServer().getPluginManager().registerEvents(new BlockBreakListener(this), this);
